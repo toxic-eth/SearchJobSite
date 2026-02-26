@@ -237,8 +237,100 @@ body {
   margin-top: 18px;
 }
 
+.employer-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.employer-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.employer-form input,
+.employer-form textarea,
+.employer-form select {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 8px 10px;
+  color: #fff;
+  background: rgba(5, 7, 14, 0.55);
+  font-family: inherit;
+}
+
+.employer-form textarea {
+  min-height: 84px;
+}
+
+.employer-form .submit {
+  grid-column: 1 / -1;
+}
+
+.success {
+  margin: 0;
+  color: #89e7a8;
+}
+
+.shift-card.selected {
+  border-color: rgba(196, 122, 255, 0.55);
+}
+
+.funnel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.funnel-col {
+  display: grid;
+  gap: 8px;
+}
+
+.funnel-col h3 {
+  margin: 0;
+}
+
+.mini-card {
+  margin-top: 0;
+}
+
+.actions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.accept-btn,
+.reject-btn {
+  border: 0;
+  border-radius: 10px;
+  min-height: 34px;
+  padding: 0 12px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.accept-btn {
+  background: rgba(69, 172, 114, 0.8);
+}
+
+.reject-btn {
+  background: rgba(170, 77, 103, 0.8);
+}
+
 @media (max-width: 900px) {
   .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .funnel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employer-form {
     grid-template-columns: 1fr;
   }
 }

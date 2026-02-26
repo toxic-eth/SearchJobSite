@@ -3,6 +3,7 @@ import type {
   ApplicationsResponse,
   AuthResponse,
   MeResponse,
+  ShiftDetailResponse,
   ShiftListResponse,
   UserRole,
 } from './types'
@@ -92,6 +93,36 @@ export const apiClient = {
     return request<ShiftListResponse>('/shifts')
   },
 
+  shiftById(shiftId: number, token?: string | null) {
+    return request<ShiftDetailResponse>(`/shifts/${shiftId}`, { token })
+  },
+
+  myShifts(token: string) {
+    return request<ShiftListResponse>('/my/shifts', { token })
+  },
+
+  createShift(
+    token: string,
+    input: {
+      title: string
+      details?: string
+      address?: string
+      pay_per_hour: number
+      start_at: string
+      end_at: string
+      latitude: number
+      longitude: number
+      work_format: 'online' | 'offline'
+      required_workers: number
+    },
+  ) {
+    return request<ShiftDetailResponse>('/shifts', {
+      method: 'POST',
+      token,
+      body: input,
+    })
+  },
+
   myApplications(token: string) {
     return request<ApplicationsResponse>('/my/applications', { token })
   },
@@ -101,6 +132,18 @@ export const apiClient = {
       method: 'POST',
       token,
       body: message ? { message } : {},
+    })
+  },
+
+  updateApplicationStatus(
+    token: string,
+    applicationId: number,
+    status: 'pending' | 'accepted' | 'rejected',
+  ) {
+    return request<ApplicationCreateResponse>(`/applications/${applicationId}/status`, {
+      method: 'PATCH',
+      token,
+      body: { status },
     })
   },
 }

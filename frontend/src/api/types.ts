@@ -52,6 +52,10 @@ export interface ShiftApplication {
   worker_id: number
   status: 'pending' | 'accepted' | 'rejected'
   message?: string | null
+  worker?: {
+    id: number
+    name: string
+  }
 }
 
 export interface ApplicationsResponse {
@@ -60,4 +64,10 @@ export interface ApplicationsResponse {
 
 export interface ApplicationCreateResponse {
   data: ShiftApplication
+}
+
+export interface ShiftDetailResponse {
+  data: Shift & {
+    applications?: ShiftApplication[]
+  }
 }

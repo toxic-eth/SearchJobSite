@@ -47,15 +47,19 @@ Status note (2026-02-26):
 - Backend-DTO расширен: address, work_format, required_workers, employer.rating/reviews_count.
 
 ## Phase 3 — Employer Posting Core (P0)
-- [ ] Wizard создания смены (role/pay/time/address/slots)
+- [x] Wizard создания смены (role/pay/time/address/slots)
 - [ ] Выбор адреса: geocode + pin-on-map
 - [ ] Управление сменой: edit/close/reopen
-- [ ] Воронка заявок: pending/accepted/rejected
+- [x] Воронка заявок: pending/accepted/rejected
 - [ ] Базовая аналитика смены (views -> applies -> confirmed)
 
 Exit criteria:
 - работодатель публикует смену <= 5 мин;
 - смена отображается в worker discovery без ручных операций.
+
+Status note (2026-02-26):
+- Реализованы создание смены и управление статусами заявок из web-кабинета работодателя.
+- Для завершения Phase 3 осталось: map-based geocode picker, edit/close/reopen, conversion analytics.
 
 ## Phase 4 — Execution, Trust, Reviews (P0)
 - [ ] Shift lifecycle: scheduled -> in progress -> completed
