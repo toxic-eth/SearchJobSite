@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: QuickGig API
+  version: 1.0.0
+  description: |
+    API contract v1 for QuickGig web/mobile clients.
+servers:
+  - url: http://127.0.0.1:8000/api
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+
+  schemas:
+    Role:
+      type: string
+      enum: [worker, employer]
+
+    User:
+      type: object
+      required: [id, name, phone, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+          example: "380673334455"
+        email:
+          type: string
+          nullable: true
+        role:
+          $ref: '#/components/schemas/Role'
+        rating:
+          type: number
+          format: float
+        reviews_count:
+          type: integer
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+paths:
+  /health:
+    get:
+      summary: API liveness check
+      responses:
+        '200':
+          description: OK
+
+  /register:
+    post:
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, phone, password, role]
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+                  pattern: '^380\d{9}$'
+                email:
+                  type: string
+                  nullable: true
+                password:
+                  type: string
+                  minLength: 6
+                role:
+                  $ref: '#/components/schemas/Role'
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /login:
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^380\d{9}$'
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /me:
+    get:
+      summary: Current authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /logout:
+    post:
+      summary: Logout current token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out
+
+  /shifts:
+    get:
+      summary: List shifts
+      responses:
+        '200':
+          description: Shifts list
+    post:
+      summary: Create shift (employer only)
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Shift created
+
+  /shifts/{id}:
+    get:
+      summary: Shift detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shift detail
+
+  /shifts/{id}/apply:
+    post:
+      summary: Apply to shift (worker only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Application created
+
+  /my/shifts:
+    get:
+      summary: Employer shifts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List
+
+  /my/applications:
+    get:
+      summary: Worker applications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List
+
+  /applications/{id}/status:
+    patch:
+      summary: Update application status (employer)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Updated
+
+  /reviews:
+    post:
+      summary: Create review
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Review created

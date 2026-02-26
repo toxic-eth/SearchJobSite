@@ -17,14 +17,19 @@ Exit criteria:
 - SLA и KPI приняты и задокументированы.
 
 ## Phase 1 — Platform Foundation (P0)
-- [ ] Backend API contract v1 (OpenAPI/Swagger)
-- [ ] Ролевая phone auth + session/token hardening
-- [ ] CORS, rate limit, audit logging, error model
+- [x] Backend API contract v1 (OpenAPI/Swagger)
+- [x] Ролевая phone auth + session/token hardening
+- [x] CORS, rate limit, audit logging, error model
 - [ ] Frontend shell: routing, role guards, i18n (uk/ru/en), theme tokens
 
 Exit criteria:
 - worker/employer могут зарегистрироваться и войти;
 - единая схема ошибок и логирования в проде.
+
+Status note (2026-02-26):
+- Реализованы web auth + role guards + token restore/logout.
+- Инициализирован API health-check и CORS для web origin.
+- Для полной готовности Phase 1 осталось: i18n (uk/ru/en) и theme token system.
 
 ## Phase 2 — Worker Discovery Core (P0)
 - [ ] Главный экран worker: map/list toggle

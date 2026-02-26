@@ -1,34 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './auth/AuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { RoleRoute } from './components/RoleRoute'
+import { AuthPage } from './pages/AuthPage'
+import { EmployerHomePage } from './pages/EmployerHomePage'
+import { WorkerHomePage } from './pages/WorkerHomePage'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+function RootRedirect() {
+  const { user, isLoading } = useAuth()
 
+  if (isLoading) {
+    return <div className="centered">Завантаження...</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
+  }
+
+  return <Navigate to={user.role === 'worker' ? '/worker' : '/employer'} replace />
+}
+
+function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Routes>
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/auth" element={<AuthPage />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route element={<RoleRoute role="worker" />}>
+          <Route path="/worker" element={<WorkerHomePage />} />
+        </Route>
+
+        <Route element={<RoleRoute role="employer" />}>
+          <Route path="/employer" element={<EmployerHomePage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
