@@ -32,15 +32,19 @@ Status note (2026-02-26):
 - Для полной готовности Phase 1 осталось: i18n (uk/ru/en) и theme token system.
 
 ## Phase 2 — Worker Discovery Core (P0)
-- [ ] Главный экран worker: map/list toggle
-- [ ] Search + фильтры (оплата, дата/время, формат, дистанция)
-- [ ] Геолокация и корректный distance filter от user location
+- [x] Главный экран worker: map/list toggle
+- [x] Search + фильтры (оплата, дата/время, формат, дистанция)
+- [x] Геолокация и корректный distance filter от user location
 - [ ] Карточка смены: условия, адрес, рейтинг работодателя, слотность
-- [ ] Apply flow (1-click + подтверждение)
+- [x] Apply flow (1-click + підтвердження)
 
 Exit criteria:
 - новый worker доходит до первого отклика <= 3 мин;
 - фильтры влияют на выдачу детерминированно и проверяемо.
+
+Status note (2026-02-26):
+- Реализованы worker discovery list/map, фильтры и apply flow.
+- Для полного закрытия фазы осталось расширить backend-DTO (адрес, slot capacity, рейтинг работодателя в list payload).
 
 ## Phase 3 — Employer Posting Core (P0)
 - [ ] Wizard создания смены (role/pay/time/address/slots)

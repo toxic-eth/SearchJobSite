@@ -1,4 +1,11 @@
-import type { AuthResponse, MeResponse, UserRole } from './types'
+import type {
+  ApplicationCreateResponse,
+  ApplicationsResponse,
+  AuthResponse,
+  MeResponse,
+  ShiftListResponse,
+  UserRole,
+} from './types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api'
 
@@ -78,6 +85,22 @@ export const apiClient = {
     return request<{ message: string }>('/logout', {
       method: 'POST',
       token,
+    })
+  },
+
+  shifts() {
+    return request<ShiftListResponse>('/shifts')
+  },
+
+  myApplications(token: string) {
+    return request<ApplicationsResponse>('/my/applications', { token })
+  },
+
+  applyToShift(token: string, shiftId: number, message?: string) {
+    return request<ApplicationCreateResponse>(`/shifts/${shiftId}/apply`, {
+      method: 'POST',
+      token,
+      body: message ? { message } : {},
     })
   },
 }
