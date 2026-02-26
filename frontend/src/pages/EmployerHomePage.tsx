@@ -1,7 +1,11 @@
+import L from 'leaflet'
 import { useEffect, useMemo, useState } from 'react'
+import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
 import { ApiError, apiClient } from '../api/client'
 import type { Shift, ShiftApplication } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
+
+type FormMode = 'create' | 'edit'
 
 interface ShiftDraft {
   title: string
@@ -15,6 +19,14 @@ interface ShiftDraft {
   workFormat: 'online' | 'offline'
   requiredWorkers: string
 }
+
+const markerIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+})
 
 const initialShiftDraft: ShiftDraft = {
   title: '',
@@ -36,15 +48,80 @@ function formatDate(value: string): string {
   })
 }
 
+function toDateTimeLocal(iso: string): string {
+  const date = new Date(iso)
+  const offsetMs = date.getTimezoneOffset() * 60_000
+  const local = new Date(date.getTime() - offsetMs)
+  return local.toISOString().slice(0, 16)
+}
+
+function inferAddressFallback(lat: number, lng: number): string {
+  return `Координати: ${lat.toFixed(5)}, ${lng.toFixed(5)}`
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  const endpoint = new URL('https://nominatim.openstreetmap.org/reverse')
+  endpoint.searchParams.set('lat', String(lat))
+  endpoint.searchParams.set('lon', String(lng))
+  endpoint.searchParams.set('format', 'jsonv2')
+  endpoint.searchParams.set('accept-language', 'uk')
+
+  try {
+    const response = await fetch(endpoint.toString(), {
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+    if (!response.ok) return inferAddressFallback(lat, lng)
+    const data = (await response.json()) as { display_name?: string }
+    return data.display_name ?? inferAddressFallback(lat, lng)
+  } catch {
+    return inferAddressFallback(lat, lng)
+  }
+}
+
+function LocationPickerMap({
+  lat,
+  lng,
+  onChange,
+}: {
+  lat: number
+  lng: number
+  onChange: (latitude: number, longitude: number) => void
+}) {
+  useMapEvents({
+    click: (event) => {
+      onChange(event.latlng.lat, event.latlng.lng)
+    },
+  })
+
+  return (
+    <Marker
+      icon={markerIcon}
+      position={[lat, lng]}
+      draggable
+      eventHandlers={{
+        dragend: (event) => {
+          const target = event.target as L.Marker
+          const position = target.getLatLng()
+          onChange(position.lat, position.lng)
+        },
+      }}
+    />
+  )
+}
+
 export function EmployerHomePage() {
   const { user, token, logout } = useAuth()
 
+  const [mode, setMode] = useState<FormMode>('create')
+  const [editingShiftId, setEditingShiftId] = useState<number | null>(null)
   const [draft, setDraft] = useState<ShiftDraft>(initialShiftDraft)
   const [myShifts, setMyShifts] = useState<Shift[]>([])
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null)
   const [selectedApplications, setSelectedApplications] = useState<ShiftApplication[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isCreating, setIsCreating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -88,7 +165,30 @@ export function EmployerHomePage() {
     }
   }
 
-  async function handleCreateShift(event: React.FormEvent<HTMLFormElement>) {
+  function resetCreateMode() {
+    setMode('create')
+    setEditingShiftId(null)
+    setDraft(initialShiftDraft)
+  }
+
+  function enterEditMode(shift: Shift) {
+    setMode('edit')
+    setEditingShiftId(shift.id)
+    setDraft({
+      title: shift.title,
+      details: shift.details ?? '',
+      address: shift.address ?? '',
+      payPerHour: String(shift.pay_per_hour),
+      startAt: toDateTimeLocal(shift.start_at),
+      endAt: toDateTimeLocal(shift.end_at),
+      latitude: String(shift.latitude),
+      longitude: String(shift.longitude),
+      workFormat: shift.work_format,
+      requiredWorkers: String(shift.required_workers),
+    })
+  }
+
+  async function saveShift(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!token) return
 
@@ -104,54 +204,68 @@ export function EmployerHomePage() {
       setError('Вкажіть назву зміни')
       return
     }
-
     if (!draft.startAt || !draft.endAt) {
       setError('Вкажіть дату і час початку/завершення')
       return
     }
-
     if (Number.isNaN(payPerHour) || payPerHour <= 0) {
       setError('Некоректна оплата за годину')
       return
     }
-
     if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
       setError('Некоректні координати')
       return
     }
-
     if (Number.isNaN(requiredWorkers) || requiredWorkers <= 0) {
       setError('Некоректна кількість місць')
       return
     }
 
-    setIsCreating(true)
+    setIsSaving(true)
+
+    const payload = {
+      title: draft.title.trim(),
+      details: draft.details.trim(),
+      address: draft.address.trim(),
+      pay_per_hour: payPerHour,
+      start_at: new Date(draft.startAt).toISOString(),
+      end_at: new Date(draft.endAt).toISOString(),
+      latitude,
+      longitude,
+      work_format: draft.workFormat,
+      required_workers: requiredWorkers,
+    }
 
     try {
-      await apiClient.createShift(token, {
-        title: draft.title.trim(),
-        details: draft.details.trim(),
-        address: draft.address.trim(),
-        pay_per_hour: payPerHour,
-        start_at: new Date(draft.startAt).toISOString(),
-        end_at: new Date(draft.endAt).toISOString(),
-        latitude,
-        longitude,
-        work_format: draft.workFormat,
-        required_workers: requiredWorkers,
-      })
+      if (mode === 'create') {
+        const response = await apiClient.createShift(token, payload)
+        setSuccess('Зміну створено')
+        resetCreateMode()
+        setSelectedShift(response.data)
+      } else if (editingShiftId) {
+        const response = await apiClient.updateShift(token, editingShiftId, payload)
+        setSuccess('Зміну оновлено')
+        setSelectedShift(response.data)
+      }
 
-      setSuccess('Зміну створено')
-      setDraft({
-        ...initialShiftDraft,
-        latitude: draft.latitude,
-        longitude: draft.longitude,
-      })
       await loadMyShifts()
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не вдалося створити зміну')
+      setError(err instanceof ApiError ? err.message : 'Помилка збереження зміни')
     } finally {
-      setIsCreating(false)
+      setIsSaving(false)
+    }
+  }
+
+  async function toggleShiftStatus(shift: Shift) {
+    if (!token) return
+    const nextStatus = shift.status === 'closed' ? 'open' : 'closed'
+
+    try {
+      await apiClient.updateShift(token, shift.id, { status: nextStatus })
+      setSuccess(nextStatus === 'closed' ? 'Зміну закрито' : 'Зміну перевідкрито')
+      await loadMyShifts()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Не вдалося оновити статус зміни')
     }
   }
 
@@ -186,6 +300,31 @@ export function EmployerHomePage() {
     }
   }, [selectedApplications])
 
+  const analytics = useMemo(() => {
+    const totalShifts = myShifts.length
+    const totalApplies = myShifts.reduce((sum, shift) => sum + (shift.applications_count ?? 0), 0)
+    const totalAccepted = myShifts.reduce((sum, shift) => sum + (shift.accepted_applications_count ?? 0), 0)
+    const acceptedRate = totalApplies > 0 ? Math.round((totalAccepted / totalApplies) * 100) : 0
+
+    return { totalShifts, totalApplies, totalAccepted, acceptedRate }
+  }, [myShifts])
+
+  async function updateDraftLocation(latitude: number, longitude: number) {
+    setDraft((prev) => ({
+      ...prev,
+      latitude: latitude.toFixed(6),
+      longitude: longitude.toFixed(6),
+    }))
+
+    if (draft.workFormat === 'online') return
+    const address = await reverseGeocode(latitude, longitude)
+    setDraft((prev) => ({ ...prev, address }))
+  }
+
+  const draftLat = Number(draft.latitude)
+  const draftLng = Number(draft.longitude)
+  const canRenderMap = !Number.isNaN(draftLat) && !Number.isNaN(draftLng)
+
   return (
     <main className="dashboard">
       <header>
@@ -197,12 +336,39 @@ export function EmployerHomePage() {
 
       <section className="panel">
         <h2>Вітаємо, {user?.name}</h2>
-        <p className="muted">Створюйте зміни, переглядайте відгуки та керуйте воронкою кандидатів.</p>
+        <p className="muted">Створюйте зміни, редагуйте їх та керуйте воронкою кандидатів.</p>
+      </section>
+
+      <section className="panel analytics-grid">
+        <article>
+          <h3>Змін</h3>
+          <p>{analytics.totalShifts}</p>
+        </article>
+        <article>
+          <h3>Відгуків</h3>
+          <p>{analytics.totalApplies}</p>
+        </article>
+        <article>
+          <h3>Прийнято</h3>
+          <p>{analytics.totalAccepted}</p>
+        </article>
+        <article>
+          <h3>Conversion</h3>
+          <p>{analytics.acceptedRate}%</p>
+        </article>
       </section>
 
       <section className="panel">
-        <h2>Створити зміну</h2>
-        <form className="employer-form" onSubmit={handleCreateShift}>
+        <div className="form-mode-header">
+          <h2>{mode === 'create' ? 'Створити зміну' : 'Редагування зміни'}</h2>
+          {mode === 'edit' && (
+            <button className="ghost-btn" type="button" onClick={resetCreateMode}>
+              Вийти з редагування
+            </button>
+          )}
+        </div>
+
+        <form className="employer-form" onSubmit={saveShift}>
           <label>
             Назва
             <input value={draft.title} onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))} placeholder="Наприклад: Касир на вечір" />
@@ -271,8 +437,21 @@ export function EmployerHomePage() {
             <input value={draft.longitude} onChange={(e) => setDraft((prev) => ({ ...prev, longitude: e.target.value }))} />
           </label>
 
-          <button className="submit" disabled={isCreating} type="submit">
-            {isCreating ? 'Створення...' : 'Створити зміну'}
+          {canRenderMap && draft.workFormat === 'offline' && (
+            <div className="map-picker-wrap">
+              <MapContainer center={[draftLat, draftLng]} zoom={13} style={{ height: 300, width: '100%', borderRadius: 12 }}>
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <LocationPickerMap lat={draftLat} lng={draftLng} onChange={updateDraftLocation} />
+              </MapContainer>
+              <p className="muted">Клікніть по мапі або перетягніть маркер, щоб обрати адресу.</p>
+            </div>
+          )}
+
+          <button className="submit" disabled={isSaving} type="submit">
+            {isSaving ? 'Збереження...' : mode === 'create' ? 'Створити зміну' : 'Зберегти зміни'}
           </button>
         </form>
       </section>
@@ -298,12 +477,28 @@ export function EmployerHomePage() {
                   <h3>{shift.title}</h3>
                   <span className="price">{shift.pay_per_hour} грн/год</span>
                 </div>
-                <p className="muted">{shift.address || 'Адреса не вказана'} • {shift.work_format === 'online' ? 'Онлайн' : 'Офлайн'}</p>
-                <p className="muted">{formatDate(shift.start_at)} — {formatDate(shift.end_at)}</p>
-                <p className="muted">Кандидатів: {shift.applications_count ?? 0} / місць: {shift.required_workers}</p>
-                <button className="submit" type="button" onClick={() => void handleSelectShift(shift)}>
-                  Відкрити воронку
-                </button>
+                <p className="muted">
+                  {shift.address || 'Адреса не вказана'} • {shift.work_format === 'online' ? 'Онлайн' : 'Офлайн'} •{' '}
+                  <b>{shift.status === 'closed' ? 'Закрита' : 'Відкрита'}</b>
+                </p>
+                <p className="muted">
+                  {formatDate(shift.start_at)} — {formatDate(shift.end_at)}
+                </p>
+                <p className="muted">
+                  Pending: {shift.pending_applications_count ?? 0} • Accepted: {shift.accepted_applications_count ?? 0} • Rejected:{' '}
+                  {shift.rejected_applications_count ?? 0}
+                </p>
+                <div className="actions-row">
+                  <button className="submit" type="button" onClick={() => void handleSelectShift(shift)}>
+                    Відкрити воронку
+                  </button>
+                  <button className="ghost-btn" type="button" onClick={() => enterEditMode(shift)}>
+                    Редагувати
+                  </button>
+                  <button className="ghost-btn" type="button" onClick={() => void toggleShiftStatus(shift)}>
+                    {shift.status === 'closed' ? 'Перевідкрити' : 'Закрити'}
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -318,7 +513,9 @@ export function EmployerHomePage() {
               <h3>Очікують ({groupedApplications.pending.length})</h3>
               {groupedApplications.pending.map((application) => (
                 <article key={application.id} className="panel mini-card">
-                  <p><b>{application.worker?.name ?? `Worker #${application.worker_id}`}</b></p>
+                  <p>
+                    <b>{application.worker?.name ?? `Worker #${application.worker_id}`}</b>
+                  </p>
                   <p className="muted">Статус: {application.status}</p>
                   <div className="actions-row">
                     <button
@@ -346,7 +543,9 @@ export function EmployerHomePage() {
               <h3>Прийняті ({groupedApplications.accepted.length})</h3>
               {groupedApplications.accepted.map((application) => (
                 <article key={application.id} className="panel mini-card">
-                  <p><b>{application.worker?.name ?? `Worker #${application.worker_id}`}</b></p>
+                  <p>
+                    <b>{application.worker?.name ?? `Worker #${application.worker_id}`}</b>
+                  </p>
                   <p className="muted">Статус: {application.status}</p>
                 </article>
               ))}
@@ -356,7 +555,9 @@ export function EmployerHomePage() {
               <h3>Відхилені ({groupedApplications.rejected.length})</h3>
               {groupedApplications.rejected.map((application) => (
                 <article key={application.id} className="panel mini-card">
-                  <p><b>{application.worker?.name ?? `Worker #${application.worker_id}`}</b></p>
+                  <p>
+                    <b>{application.worker?.name ?? `Worker #${application.worker_id}`}</b>
+                  </p>
                   <p className="muted">Статус: {application.status}</p>
                 </article>
               ))}

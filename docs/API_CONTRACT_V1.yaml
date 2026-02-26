@@ -86,6 +86,12 @@ components:
           type: integer
         applications_count:
           type: integer
+        pending_applications_count:
+          type: integer
+        accepted_applications_count:
+          type: integer
+        rejected_applications_count:
+          type: integer
         employer:
           type: object
           properties:
@@ -223,6 +229,52 @@ paths:
       responses:
         '200':
           description: Shift detail
+    patch:
+      summary: Update shift (employer only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                details:
+                  type: string
+                address:
+                  type: string
+                pay_per_hour:
+                  type: integer
+                start_at:
+                  type: string
+                  format: date-time
+                end_at:
+                  type: string
+                  format: date-time
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                work_format:
+                  type: string
+                  enum: [online, offline]
+                required_workers:
+                  type: integer
+                status:
+                  type: string
+                  enum: [open, closed]
+      responses:
+        '200':
+          description: Shift updated
 
   /shifts/{id}/apply:
     post:

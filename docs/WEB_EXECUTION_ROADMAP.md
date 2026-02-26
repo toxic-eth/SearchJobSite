@@ -48,18 +48,17 @@ Status note (2026-02-26):
 
 ## Phase 3 — Employer Posting Core (P0)
 - [x] Wizard создания смены (role/pay/time/address/slots)
-- [ ] Выбор адреса: geocode + pin-on-map
-- [ ] Управление сменой: edit/close/reopen
+- [x] Выбор адреса: geocode + pin-on-map
+- [x] Управление сменой: edit/close/reopen
 - [x] Воронка заявок: pending/accepted/rejected
-- [ ] Базовая аналитика смены (views -> applies -> confirmed)
+- [x] Базовая аналитика смены (views -> applies -> confirmed)
 
 Exit criteria:
 - работодатель публикует смену <= 5 мин;
 - смена отображается в worker discovery без ручных операций.
 
 Status note (2026-02-26):
-- Реализованы создание смены и управление статусами заявок из web-кабинета работодателя.
-- Для завершения Phase 3 осталось: map-based geocode picker, edit/close/reopen, conversion analytics.
+- Реализованы: shift wizard, map geocode picker, edit/close/reopen, funnel pending/accepted/rejected и conversion analytics.
 
 ## Phase 4 — Execution, Trust, Reviews (P0)
 - [ ] Shift lifecycle: scheduled -> in progress -> completed

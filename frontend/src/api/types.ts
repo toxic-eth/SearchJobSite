@@ -34,6 +34,9 @@ export interface Shift {
   required_workers: number
   status?: 'open' | 'closed'
   applications_count?: number
+  pending_applications_count?: number
+  accepted_applications_count?: number
+  rejected_applications_count?: number
   employer?: {
     id: number
     name: string

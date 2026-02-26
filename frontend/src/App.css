@@ -301,6 +301,7 @@ body {
 .actions-row {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .accept-btn,
@@ -321,6 +322,51 @@ body {
   background: rgba(170, 77, 103, 0.8);
 }
 
+.ghost-btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  min-height: 34px;
+  padding: 0 12px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.analytics-grid article {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.analytics-grid h3 {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(230, 230, 245, 0.8);
+}
+
+.analytics-grid p {
+  margin: 6px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.form-mode-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.map-picker-wrap {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 900px) {
   .filters-grid {
     grid-template-columns: 1fr;
@@ -332,5 +378,9 @@ body {
 
   .employer-form {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }

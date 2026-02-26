@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::post('/shifts', [ShiftController::class, 'store']);
+    Route::patch('/shifts/{shift}', [ShiftController::class, 'update']);
     Route::get('/my/shifts', [ShiftController::class, 'myShifts']);
 
     Route::post('/shifts/{shift}/apply', [ApplicationController::class, 'apply']);

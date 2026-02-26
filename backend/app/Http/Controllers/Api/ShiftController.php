@@ -100,6 +100,47 @@ class ShiftController extends Controller
         return response()->json(['data' => $shift], 201);
     }
 
+    public function update(Request $request, Shift $shift): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'employer') {
+            return response()->json(['message' => 'Только работодатель может редактировать смены'], 403);
+        }
+
+        if ($shift->employer_id !== $user->id) {
+            return response()->json(['message' => 'Нет доступа к этой смене'], 403);
+        }
+
+        $validated = $request->validate([
+            'title' => ['sometimes', 'string', 'max:120'],
+            'details' => ['nullable', 'string', 'max:1000'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'pay_per_hour' => ['sometimes', 'integer', 'min:1'],
+            'start_at' => ['sometimes', 'date'],
+            'end_at' => ['sometimes', 'date'],
+            'latitude' => ['sometimes', 'numeric'],
+            'longitude' => ['sometimes', 'numeric'],
+            'work_format' => ['sometimes', 'in:online,offline'],
+            'required_workers' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'status' => ['sometimes', 'in:open,closed'],
+        ]);
+
+        if (isset($validated['start_at']) || isset($validated['end_at'])) {
+            $startAt = $validated['start_at'] ?? $shift->start_at;
+            $endAt = $validated['end_at'] ?? $shift->end_at;
+            if (strtotime((string) $endAt) <= strtotime((string) $startAt)) {
+                return response()->json(['message' => 'Дата завершення має бути пізніше дати початку'], 422);
+            }
+        }
+
+        $shift->update($validated);
+
+        return response()->json([
+            'data' => $shift->fresh()->load('employer:id,name', 'applications.worker:id,name'),
+        ]);
+    }
+
     public function myShifts(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -109,6 +150,11 @@ class ShiftController extends Controller
         }
 
         $shifts = Shift::withCount('applications')
+            ->withCount([
+                'applications as pending_applications_count' => fn ($query) => $query->where('status', 'pending'),
+                'applications as accepted_applications_count' => fn ($query) => $query->where('status', 'accepted'),
+                'applications as rejected_applications_count' => fn ($query) => $query->where('status', 'rejected'),
+            ])
             ->where('employer_id', $user->id)
             ->orderByDesc('created_at')
             ->get();

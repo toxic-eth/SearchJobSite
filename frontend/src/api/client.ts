@@ -123,6 +123,30 @@ export const apiClient = {
     })
   },
 
+  updateShift(
+    token: string,
+    shiftId: number,
+    input: Partial<{
+      title: string
+      details: string
+      address: string
+      pay_per_hour: number
+      start_at: string
+      end_at: string
+      latitude: number
+      longitude: number
+      work_format: 'online' | 'offline'
+      required_workers: number
+      status: 'open' | 'closed'
+    }>,
+  ) {
+    return request<ShiftDetailResponse>(`/shifts/${shiftId}`, {
+      method: 'PATCH',
+      token,
+      body: input,
+    })
+  },
+
   myApplications(token: string) {
     return request<ApplicationsResponse>('/my/applications', { token })
   },
