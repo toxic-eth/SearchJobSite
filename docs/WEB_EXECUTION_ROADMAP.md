@@ -1,28 +1,93 @@
-# Web Execution Roadmap
+# QuickGig Web Execution Roadmap
 
 Last update: 2026-02-26
+Source baseline: `WEB_COMPETITOR_ANALYSIS_2026-02-26.md`
 
-## P0 (MVP web launch)
-- [ ] Auth (phone + role)
-- [ ] Worker map/list discovery
-- [ ] Filters (pay, date/time, format, distance)
-- [ ] Employer shift creation/edit/close
-- [ ] Applications flow
-- [ ] Activity statuses
-- [ ] Reviews after completed shift
-- [ ] Profile + settings
+## Release target
+Запуск production-ready web MVP для України с разделением ролей worker/employer.
 
-## P1
-- [ ] Real-time chat
-- [ ] Risk/moderation panel
-- [ ] Reporting and analytics dashboard
+## Phase 0 — Product & Legal Baseline (P0)
+- [ ] Утвердить ICP по 2 ролям (worker/employer) и JTBD
+- [ ] Финализировать UA legal package (Privacy, Terms, Support, data processing)
+- [ ] Определить SLA поддержки и споров
+- [ ] Зафиксировать KPI релиза (Activation, Apply rate, Completion rate, Dispute rate)
 
-## P2
-- [ ] Real payments / escrow
-- [ ] Full admin backoffice
+Exit criteria:
+- все legal URL публичны;
+- SLA и KPI приняты и задокументированы.
 
-## Tech tasks
-- [ ] CORS and API contracts for web client
-- [ ] Unified DTOs for iOS/web compatibility
-- [ ] E2E tests (worker/employer critical paths)
-- [ ] CI/CD for backend and frontend
+## Phase 1 — Platform Foundation (P0)
+- [ ] Backend API contract v1 (OpenAPI/Swagger)
+- [ ] Ролевая phone auth + session/token hardening
+- [ ] CORS, rate limit, audit logging, error model
+- [ ] Frontend shell: routing, role guards, i18n (uk/ru/en), theme tokens
+
+Exit criteria:
+- worker/employer могут зарегистрироваться и войти;
+- единая схема ошибок и логирования в проде.
+
+## Phase 2 — Worker Discovery Core (P0)
+- [ ] Главный экран worker: map/list toggle
+- [ ] Search + фильтры (оплата, дата/время, формат, дистанция)
+- [ ] Геолокация и корректный distance filter от user location
+- [ ] Карточка смены: условия, адрес, рейтинг работодателя, слотность
+- [ ] Apply flow (1-click + подтверждение)
+
+Exit criteria:
+- новый worker доходит до первого отклика <= 3 мин;
+- фильтры влияют на выдачу детерминированно и проверяемо.
+
+## Phase 3 — Employer Posting Core (P0)
+- [ ] Wizard создания смены (role/pay/time/address/slots)
+- [ ] Выбор адреса: geocode + pin-on-map
+- [ ] Управление сменой: edit/close/reopen
+- [ ] Воронка заявок: pending/accepted/rejected
+- [ ] Базовая аналитика смены (views -> applies -> confirmed)
+
+Exit criteria:
+- работодатель публикует смену <= 5 мин;
+- смена отображается в worker discovery без ручных операций.
+
+## Phase 4 — Execution, Trust, Reviews (P0)
+- [ ] Shift lifecycle: scheduled -> in progress -> completed
+- [ ] Гео check-in/check-out (радиус + контроль антифрода)
+- [ ] Отзывы только после completed для обеих сторон
+- [ ] Рейтинг/надежность (completion, cancel, no-show)
+- [ ] Dispute ticket v1 + статус + SLA таймер
+
+Exit criteria:
+- есть traceable история выполнения смены;
+- отзыв нельзя оставить без факта сотрудничества.
+
+## Phase 5 — Communication & Notifications (P1)
+- [ ] Chat worker<->employer по смене
+- [ ] Notification center (in-app + email)
+- [ ] Настройки уведомлений по категориям
+- [ ] Anti-spam caps и relevance rules
+
+Exit criteria:
+- коммуникация закрывается внутри продукта;
+- нет flood-уведомлений по системным тестам.
+
+## Phase 6 — Ops, QA, Release (P0)
+- [ ] E2E smoke suite для критических сценариев
+- [ ] Monitoring: API latency/error rate, auth failures, payout/dispute alerts
+- [ ] Release checklist и rollback plan
+- [ ] Staging -> production rollout c post-release watch (72h)
+
+Exit criteria:
+- критические сценарии проходят E2E;
+- observability покрывает auth/discovery/execution/disputes.
+
+## KPI targets for MVP
+- Activation (register -> first apply in 24h): >= 35%
+- Apply->Accept conversion: >= 20%
+- Completed shifts / accepted: >= 80%
+- Dispute rate: <= 3%
+- Median time-to-fill shift: <= 24h
+
+## Backlog (post-MVP)
+- [ ] Real-time WebSocket chat with delivery guarantees
+- [ ] Payout wallet and reconciliation dashboard
+- [ ] Employer KYC кабинет и moderation console
+- [ ] Recommendation ranking model
