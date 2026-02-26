@@ -35,7 +35,7 @@ Status note (2026-02-26):
 - [x] Главный экран worker: map/list toggle
 - [x] Search + фильтры (оплата, дата/время, формат, дистанция)
 - [x] Геолокация и корректный distance filter от user location
-- [ ] Карточка смены: условия, адрес, рейтинг работодателя, слотность
+- [x] Карточка смены: условия, адрес, рейтинг работодателя, слотность
 - [x] Apply flow (1-click + підтвердження)
 
 Exit criteria:
@@ -44,7 +44,7 @@ Exit criteria:
 
 Status note (2026-02-26):
 - Реализованы worker discovery list/map, фильтры и apply flow.
-- Для полного закрытия фазы осталось расширить backend-DTO (адрес, slot capacity, рейтинг работодателя в list payload).
+- Backend-DTO расширен: address, work_format, required_workers, employer.rating/reviews_count.
 
 ## Phase 3 — Employer Posting Core (P0)
 - [ ] Wizard создания смены (role/pay/time/address/slots)

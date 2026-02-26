@@ -50,6 +50,55 @@ components:
         user:
           $ref: '#/components/schemas/User'
 
+    Shift:
+      type: object
+      required: [id, employer_id, title, pay_per_hour, start_at, end_at, latitude, longitude, work_format, required_workers]
+      properties:
+        id:
+          type: integer
+        employer_id:
+          type: integer
+        title:
+          type: string
+        details:
+          type: string
+          nullable: true
+        address:
+          type: string
+        pay_per_hour:
+          type: integer
+        start_at:
+          type: string
+          format: date-time
+        end_at:
+          type: string
+          format: date-time
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        work_format:
+          type: string
+          enum: [online, offline]
+        required_workers:
+          type: integer
+        applications_count:
+          type: integer
+        employer:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            rating:
+              type: number
+              format: float
+            reviews_count:
+              type: integer
+
 paths:
   /health:
     get:
@@ -145,6 +194,15 @@ paths:
       responses:
         '200':
           description: Shifts list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Shift'
     post:
       summary: Create shift (employer only)
       security:

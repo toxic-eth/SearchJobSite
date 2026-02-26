@@ -29,11 +29,16 @@ export interface Shift {
   end_at: string
   latitude: number
   longitude: number
+  address: string
+  work_format: 'online' | 'offline'
+  required_workers: number
   status?: 'open' | 'closed'
   applications_count?: number
   employer?: {
     id: number
     name: string
+    rating?: number
+    reviews_count?: number
   }
 }
 

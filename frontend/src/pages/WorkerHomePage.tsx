@@ -125,10 +125,7 @@ export function WorkerHomePage() {
     const searchLower = search.trim().toLowerCase()
 
     return shifts.filter((shift) => {
-      const inferredFormat: WorkFormatFilter = /\\b(online|remote|онлайн)\\b/i.test(`${shift.title} ${shift.details ?? ''}`)
-        ? 'online'
-        : 'offline'
-      if (formatFilter !== 'all' && inferredFormat !== formatFilter) return false
+      if (formatFilter !== 'all' && shift.work_format !== formatFilter) return false
 
       if (searchLower) {
         const haystack = `${shift.title} ${shift.details ?? ''} ${shift.employer?.name ?? ''}`.toLowerCase()
@@ -257,8 +254,15 @@ export function WorkerHomePage() {
                 </div>
                 <p>{shift.details}</p>
                 <p className="muted">Роботодавець: {shift.employer?.name ?? '—'}</p>
+                <p className="muted">
+                  Рейтинг: {(shift.employer?.rating ?? 0).toFixed(1)} ({shift.employer?.reviews_count ?? 0} відгуків)
+                </p>
+                <p className="muted">Адреса: {shift.address || 'Локація не вказана'}</p>
+                <p className="muted">Формат: {shift.work_format === 'online' ? 'Онлайн' : 'Офлайн'}</p>
                 <p className="muted">Початок: {formatDate(shift.start_at)}</p>
-                <p className="muted">Кандидатів: {shift.applications_count ?? 0}</p>
+                <p className="muted">
+                  Кандидатів: {shift.applications_count ?? 0} / місць: {shift.required_workers}
+                </p>
                 {distance && <p className="muted">Відстань: {distance} км</p>}
 
                 {application ? (
@@ -309,6 +313,8 @@ export function WorkerHomePage() {
                   <b>{shift.title}</b>
                   <br />
                   {shift.pay_per_hour} грн/год
+                  <br />
+                  {shift.work_format === 'online' ? 'Онлайн' : 'Офлайн'}
                 </Popup>
               </Marker>
             ))}
@@ -323,6 +329,11 @@ export function WorkerHomePage() {
           <h2>Обрана зміна: {selectedShift.title}</h2>
           <p>{selectedShift.details}</p>
           <p className="muted">Компанія: {selectedShift.employer?.name ?? '—'}</p>
+          <p className="muted">
+            Рейтинг: {(selectedShift.employer?.rating ?? 0).toFixed(1)} ({selectedShift.employer?.reviews_count ?? 0} відгуків)
+          </p>
+          <p className="muted">Адреса: {selectedShift.address || 'Локація не вказана'}</p>
+          <p className="muted">Формат: {selectedShift.work_format === 'online' ? 'Онлайн' : 'Офлайн'}</p>
           <p className="muted">Оплата: {selectedShift.pay_per_hour} грн/год</p>
           <p className="muted">Період: {formatDate(selectedShift.start_at)} — {formatDate(selectedShift.end_at)}</p>
         </section>

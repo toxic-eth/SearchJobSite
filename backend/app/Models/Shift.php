@@ -12,11 +12,14 @@ class Shift extends Model
         'employer_id',
         'title',
         'details',
+        'address',
         'pay_per_hour',
         'start_at',
         'end_at',
         'latitude',
         'longitude',
+        'work_format',
+        'required_workers',
         'status',
     ];
 
@@ -27,6 +30,7 @@ class Shift extends Model
             'end_at' => 'datetime',
             'latitude' => 'float',
             'longitude' => 'float',
+            'required_workers' => 'integer',
         ];
     }
 
