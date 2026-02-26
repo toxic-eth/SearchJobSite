@@ -1,16 +1,22 @@
-# Frontend bootstrap status
+# QuickGigWeb Frontend
 
-Node.js/npm is not installed on current machine, so automated SPA initialization is blocked.
+Stack:
+- React
+- TypeScript
+- Vite
 
-Planned stack:
-- React + TypeScript + Vite
-- React Router
-- TanStack Query
-- Mapbox GL JS
-- i18n (uk/ru/en)
-
-After Node.js installation run:
+## Run locally
 ```bash
-npm create vite@latest . -- --template react-ts
 npm install
+npm run dev
 ```
+
+## Build
+```bash
+npm run build
+```
+
+## Next implementation step
+- Auth screens (phone + role)
+- App routing (worker/employer flows)
+- API client integration with Laravel backend
